@@ -25,9 +25,12 @@ jobs:
           mkdir -p /tmp/phantom
           unzip -oq PHANTOM-CORE-PS4-COMPLETO.zip -d /tmp/phantom
 
+          test -d /tmp/phantom/PHANTOM-CORE
           cp -a /tmp/phantom/PHANTOM-CORE/. .
 
       - name: Sincronizar e salvar
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -35,5 +38,15 @@ jobs:
           git add -A
           git commit -m "Extrair PHANTOM CORE" || true
 
-          git pull --rebase origin main
-          git push origin HEAD:main
+          for tentativa in 1 2 3; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then
+              echo "Arquivos enviados com sucesso!"
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Falha ao sincronizar com a branch main"
+          exit 1
