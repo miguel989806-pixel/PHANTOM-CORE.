@@ -1,5 +1,4 @@
-
-name: Extrair PHANTOM-CORE PS4
+name: Extrair PHANTOM CORE
 
 on:
   workflow_dispatch:
@@ -8,30 +7,37 @@ permissions:
   contents: write
 
 jobs:
-  extract:
+  extrair:
     runs-on: ubuntu-latest
 
     steps:
       - name: Baixar repositório
         uses: actions/checkout@v4
 
+      - name: Instalar ferramenta ZIP
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
       - name: Extrair projeto
         run: |
+          if [ ! -f "PHANTOM-CORE-PS4-COMPLETO.zip" ]; then
+            echo "ERRO: ZIP não encontrado na raiz do repositório."
+            exit 1
+          fi
+
           mkdir -p /tmp/phantom
-          unzip -o PHANTOM-CORE-PS4-COMPLETO.zip -d /tmp/phantom
+          unzip -oq PHANTOM-CORE-PS4-COMPLETO.zip -d /tmp/phantom
+
+          if [ ! -d "/tmp/phantom/PHANTOM-CORE" ]; then
+            echo "ERRO: pasta PHANTOM-CORE não encontrada dentro do ZIP."
+            exit 1
+          fi
 
           cp -a /tmp/phantom/PHANTOM-CORE/. .
 
-          mkdir -p .github/workflows
-          cp ps4-native/.github/workflows/build.yml \
-            .github/workflows/build-ps4.yml
-
-          rm -f ps4-native/.github/workflows/build.yml
-
-      - name: Salvar arquivos no GitHub
+      - name: Salvar no GitHub
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Extrair PHANTOM-CORE PS4" || echo "Sem alterações"
+          git commit -m "Extrair projeto PHANTOM CORE" || echo "Sem alterações"
           git push
